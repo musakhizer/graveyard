@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Map, Grid3x3, Boxes, LogOut, User, FileText } from 'lucide-react';
+import { Home, Map, Grid3x3, Boxes, LogOut, User, FileText, DollarSign } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Plots', href: '/plots', icon: Grid3x3 },
   { name: 'Graves', href: '/graves', icon: Boxes },
   { name: 'Burial Records', href: '/burial-records', icon: FileText },
+  { name: 'Finance', href: '/finance', icon: DollarSign },
 ];
 
 export default function Sidebar() {

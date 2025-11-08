@@ -2,7 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraveyard } from '@/contexts/GraveyardContext';
-import { Map, Grid3x3, Boxes, CheckCircle2, XCircle } from 'lucide-react';
+import { useFinance } from '@/contexts/FinanceContext';
+import { Map, Grid3x3, Boxes, CheckCircle2, XCircle, DollarSign, Clock } from 'lucide-react';
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const { graveyards, plots, graves } = useGraveyard();
+  const { getTotalRevenue, getPendingAmount, payments } = useFinance();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -35,6 +37,13 @@ export default function Dashboard() {
       occupancyRate: graves.length > 0 ? Math.round((unavailableGraves / graves.length) * 100) : 0,
     };
   }, [graveyards, plots, graves]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
 
   const statCards = [
     {
@@ -71,6 +80,20 @@ export default function Dashboard() {
       icon: XCircle,
       gradient: 'from-red-500 to-red-600',
       bgGradient: 'from-red-50 to-red-100',
+    },
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(getTotalRevenue()),
+      icon: DollarSign,
+      gradient: 'from-emerald-500 to-emerald-600',
+      bgGradient: 'from-emerald-50 to-emerald-100',
+    },
+    {
+      title: 'Pending Payments',
+      value: formatCurrency(getPendingAmount()),
+      icon: Clock,
+      gradient: 'from-orange-500 to-orange-600',
+      bgGradient: 'from-orange-50 to-orange-100',
     },
   ];
 
@@ -133,6 +156,12 @@ export default function Dashboard() {
                 <span className="text-sm text-slate-600">Avg. Plots per Graveyard</span>
                 <span className="font-semibold text-slate-900">
                   {stats.totalGraveyards > 0 ? Math.round(stats.totalPlots / stats.totalGraveyards) : 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600">Total Transactions</span>
+                <span className="font-semibold text-slate-900">
+                  {payments.length}
                 </span>
               </div>
             </div>
