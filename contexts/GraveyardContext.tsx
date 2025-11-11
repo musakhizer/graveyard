@@ -26,6 +26,12 @@ export interface Grave {
   graveNumber: number;
   status: 'available' | 'unavailable';
   reservedBy?: string;
+  burialRecordId?: string;
+  deceasedName?: string;
+  dateOfDeath?: string;
+  age?: number;
+  gender?: 'male' | 'female';
+  religion?: string;
 }
 
 interface GraveyardContextType {

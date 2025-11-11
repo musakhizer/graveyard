@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BurialRecordForm from '@/components/BurialRecordForm';
+import EditBurialRecordForm from '@/components/EditBurialRecordForm';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ export default function BurialRecordsPage() {
   const { records, approveRecord, rejectRecord } = useBurialRecord();
   const { plots } = useGraveyard();
   const [showForm, setShowForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [selectedRecord, setSelectedRecord] = useState<typeof records[0] | null>(null);
@@ -43,8 +45,23 @@ export default function BurialRecordsPage() {
     );
   }
 
+  if (user?.role === 'visitor') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl text-center">
+          <div className="rounded-full bg-red-100 p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Lock className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h2>
+          <p className="text-slate-600">Visitors do not have access to burial records.</p>
+        </div>
+      </div>
+    );
+  }
+
   const canAddRecord = ['admin', 'staff'].includes(user?.role || '');
   const canApprove = user?.role === 'admin';
+  const canEdit = ['admin', 'staff'].includes(user?.role || '');
 
   const filteredRecords = useMemo(() => {
     return records.filter((record) => {
@@ -193,6 +210,21 @@ export default function BurialRecordsPage() {
                             <Eye className="h-4 w-4" />
                           </button>
 
+                          {canEdit && record.status !== 'approved' && (
+                            <button
+                              onClick={() => {
+                                setSelectedRecord(record);
+                                setShowEditForm(true);
+                              }}
+                              className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 hover:text-blue-700"
+                              title="Edit record"
+                            >
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          )}
+
                           {canApprove && record.status === 'pending' && (
                             <>
                               <button
@@ -229,6 +261,20 @@ export default function BurialRecordsPage() {
       </div>
 
       {showForm && <BurialRecordForm onClose={() => setShowForm(false)} />}
+
+      {showEditForm && selectedRecord && (
+        <EditBurialRecordForm
+          record={selectedRecord}
+          onClose={() => {
+            setShowEditForm(false);
+            setSelectedRecord(null);
+          }}
+          onSuccess={() => {
+            setShowEditForm(false);
+            setSelectedRecord(null);
+          }}
+        />
+      )}
 
       {showDetails && selectedRecord && (
         <Dialog open={showDetails} onOpenChange={setShowDetails}>

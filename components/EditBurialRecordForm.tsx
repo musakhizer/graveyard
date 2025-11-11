@@ -1,36 +1,38 @@
 "use client";
 
 import { useState } from 'react';
-import { useBurialRecord } from '@/contexts/BurialRecordContext';
+import { useBurialRecord, BurialRecord } from '@/contexts/BurialRecordContext';
 import { useGraveyard } from '@/contexts/GraveyardContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
 
-interface BurialRecordFormProps {
+interface EditBurialRecordFormProps {
+  record: BurialRecord;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export default function BurialRecordForm({ onClose }: BurialRecordFormProps) {
-  const [name, setName] = useState('');
-  const [fatherName, setFatherName] = useState('');
-  const [dateOfDeath, setDateOfDeath] = useState('');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [age, setAge] = useState('');
-  const [religion, setReligion] = useState('');
-  const [plotId, setPlotId] = useState('');
-  const [graveId, setGraveId] = useState('');
+export default function EditBurialRecordForm({ record, onClose, onSuccess }: EditBurialRecordFormProps) {
+  const { updateRecord } = useBurialRecord();
+  const { plots, graves } = useGraveyard();
+
+  const [name, setName] = useState(record.name);
+  const [fatherName, setFatherName] = useState(record.fatherName);
+  const [dateOfDeath, setDateOfDeath] = useState(record.dateOfDeath);
+  const [gender, setGender] = useState<'male' | 'female'>(record.gender);
+  const [age, setAge] = useState(record.age.toString());
+  const [religion, setReligion] = useState(record.religion);
+  const [plotId, setPlotId] = useState(record.plotId);
+  const [graveId, setGraveId] = useState(record.graveId);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const { addRecord } = useBurialRecord();
-  const { plots, graves } = useGraveyard();
 
   const availablePlots = plots.filter((p) => p.totalGraves > 0);
   const selectedPlot = plots.find((p) => p.id === plotId);
   const availableGraves = selectedPlot
-    ? graves.filter((g) => g.plotId === plotId && g.status === 'available')
+    ? graves.filter((g) => g.plotId === plotId && (g.status === 'available' || g.id === graveId))
     : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +62,7 @@ export default function BurialRecordForm({ onClose }: BurialRecordFormProps) {
     setIsLoading(true);
 
     try {
-      addRecord({
+      updateRecord(record.id, {
         name,
         fatherName,
         dateOfDeath,
@@ -69,12 +71,11 @@ export default function BurialRecordForm({ onClose }: BurialRecordFormProps) {
         religion,
         plotId,
         graveId,
-        status: 'pending',
       });
 
-      onClose();
+      onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create record');
+      setError(err instanceof Error ? err.message : 'Failed to update record');
     } finally {
       setIsLoading(false);
     }
@@ -82,9 +83,9 @@ export default function BurialRecordForm({ onClose }: BurialRecordFormProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-slate-200 p-6">
-          <h2 className="text-2xl font-bold text-slate-900">New Burial Record</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Edit Burial Record</h2>
           <button
             onClick={onClose}
             className="rounded-lg p-2 hover:bg-slate-100"
@@ -228,7 +229,7 @@ export default function BurialRecordForm({ onClose }: BurialRecordFormProps) {
               disabled={isLoading}
               className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-6 py-2 rounded-lg hover:from-cyan-600 hover:to-cyan-700"
             >
-              {isLoading ? 'Creating...' : 'Create Record'}
+              {isLoading ? 'Updating...' : 'Update Record'}
             </Button>
           </div>
         </form>

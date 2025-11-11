@@ -23,11 +23,12 @@ export interface BurialRecord {
 
 interface BurialRecordContextType {
   records: BurialRecord[];
-  addRecord: (record: Omit<BurialRecord, 'id' | 'createdAt'>) => void;
+  addRecord: (record: Omit<BurialRecord, 'id' | 'createdAt'>) => BurialRecord;
   updateRecord: (id: string, updates: Partial<BurialRecord>) => void;
   deleteRecord: (id: string) => void;
   approveRecord: (id: string, approvedBy: string) => void;
   rejectRecord: (id: string, notes: string) => void;
+  getRecordById: (id: string) => BurialRecord | undefined;
 }
 
 const BurialRecordContext = createContext<BurialRecordContextType | undefined>(undefined);
@@ -73,6 +74,7 @@ export const BurialRecordProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date(),
     };
     setRecords((prev) => [newRecord, ...prev]);
+    return newRecord;
   };
 
   const updateRecord = (id: string, updates: Partial<BurialRecord>) => {
@@ -102,6 +104,10 @@ export const BurialRecordProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const getRecordById = (id: string) => {
+    return records.find((r) => r.id === id);
+  };
+
   const value: BurialRecordContextType = {
     records,
     addRecord,
@@ -109,6 +115,7 @@ export const BurialRecordProvider = ({ children }: { children: ReactNode }) => {
     deleteRecord,
     approveRecord,
     rejectRecord,
+    getRecordById,
   };
 
   return (
